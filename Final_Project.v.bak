@@ -1,0 +1,140 @@
+module Final_Project(
+input clk,
+input rst,
+input start,
+input [3:0]userIn,
+output reg [3:0]led,
+output reg [6:0]led_fail);
+
+reg [2:0]S;
+reg [2:0]NS;
+
+
+reg[1:0]input_seq = 1'b01;
+
+reg [1:0]userIn0 = 2'b00;
+reg [1:0]userIn1 = 2'b01;
+reg [1:0]userIn2 = 2'b10;
+reg [1:0]userIn3 = 2'b11;
+
+reg [3:0]light_seq= 4'b0100;
+reg [3:0]light_seq1= 4'b1000;
+reg [3:0]light_seq2= 4'b0100;
+reg [3:0]light_seq3= 4'b0001;
+reg [3:0]light_seq4= 4'b1000;
+reg [3:0]light_seq5= 4'b1000;
+reg [3:0]light_seq6= 4'b0100;
+reg [3:0]light_seq7= 4'b1000;
+reg [3:0]light_seq8= 4'b0010;
+reg [3:0]light_seq9= 4'b0100;
+reg [3:0]light_seq10= 4'b0001;
+reg [3:0]light_seq11= 4'b0001;
+reg [3:0]light_seq12= 4'b0100;
+reg [3:0]light_seq13= 4'b1000;
+reg [3:0]light_seq14= 4'b0010;
+reg [3:0]light_seq15= 4'b1000;
+reg [3:0]light_seq16= 4'b0100;
+reg [3:0]light_seq17= 4'b0100;
+reg [3:0]light_seq18= 4'b1000;
+reg [3:0]light_seq19= 4'b0010;
+
+
+
+parameter START = 4'd0,
+			 LEVEL_1 = 4'd1,
+			 LEVEL_2 = 4'd2,
+			 DONE = 4'd3;
+
+
+always @(posedge clk_out or negedge rst)
+begin
+	if (rst == 1'b0)
+		S <= START;
+	else
+		S <= NS;
+end
+
+reg [4:0]i= 4'b0;
+reg check;
+
+always@(*)
+begin
+	case(S)
+		START: if (start == 1'd0)
+			NS = START;
+		else
+			NS = LEVEL_1;
+		LEVEL_1: if(check==1'b1)
+						NS = LEVEL_2;
+					else
+						begin
+							led_fail=6'd111111;
+							NS=DONE;
+						end
+		LEVEL_2: if(check==1'b1)
+						//NS = LEVEL_3;
+						NS=DONE;
+					else
+						begin
+							led_fail=6'd111111;
+							NS=DONE;
+						end
+		DONE: if(start==1'b1)
+					NS=DONE;
+				else
+					NS=START;
+		endcase
+	end
+
+
+always @ (posedge clk_out or negedge rst)
+	begin
+		START:
+		begin
+			if(rst==1'b0)
+			led <= 4'b0;
+		end
+		LEVEL_1: begin
+						if (i<2) 
+							begin
+								led <= light_seq[i];
+
+									if(userIn1==1'b0)
+										check<=1'b1;
+									else
+										check<=1'b0;
+								 i = i+1;
+							end
+					end
+		LEVEL_2: 
+			begin
+			if (i<3) begin
+								
+				led <= light_seq[i];
+				i = i+1; end
+			end	
+				
+		
+	end
+	
+reg clk_out;
+reg [24:0]counter;
+	
+always @ (posedge clk or negedge rst)
+	begin
+		if (rst == 1'b0) 
+			begin
+				counter = 0;
+				clk_out = 0;
+			end
+		else
+			begin
+				counter = counter+1;
+				if (counter == 24'd25_000_000) 
+					begin
+						counter = 0;
+						clk_out = ~clk_out;
+					end
+			end
+	end
+endmodule 
